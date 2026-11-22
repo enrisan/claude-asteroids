@@ -119,7 +119,6 @@ class Asteroid {
 }
 
 // ── Power-up ──────────────────────────────────────────────────────────────────
-const POWERUP_DROP_CHANCE = 0.12;  // probabilidad de soltar power-up al destruir asteroide
 const POWERUP_TTL         = 8;     // segundos que el power-up flota antes de desaparecer
 const TRIPLE_SHOT_TIME    = 10;    // duración del disparo triple
 const TRIPLE_SHOT_SPREAD  = 0.22;  // separación angular del abanico (rad)
@@ -286,11 +285,17 @@ class Particle {
 let ship, bullets, asteroids, particles, powerups;
 let score, lives, level;
 let tripleShotTimer;  // segundos restantes de disparo triple
-let powerupSpawned;   // el power-up solo aparece una vez por juego
+let levelKills;       // asteroides destruidos en el nivel actual
+let powerupKillTarget; // destrucción del nivel que suelta el power-up
 let state;      // 'playing' | 'dead' | 'gameover'
 let deadTimer;
 
 function spawnAsteroids(count) {
+  // Un power-up garantizado por nivel en una destrucción aleatoria.
+  // Cada asteroide grande da 7 destrucciones (1 grande + 2 medianos + 4 chicos);
+  // se excluye la última para que no aparezca justo al terminar el nivel.
+  levelKills        = 0;
+  powerupKillTarget = randInt(1, count * 7 - 1);
   const SAFE_DIST = 130;
   for (let i = 0; i < count; i++) {
     let x, y;
@@ -309,7 +314,6 @@ function initGame() {
   particles = [];
   powerups  = [];
   tripleShotTimer = 0;
-  powerupSpawned  = false;
   score  = 0;
   lives  = 3;
   level  = 1;
@@ -388,10 +392,8 @@ function update(dt) {
         score += POINTS[a.size];
         explode(a.x, a.y, a.size * 5);
         newAsteroids.push(...a.split());
-        if (!powerupSpawned && Math.random() < POWERUP_DROP_CHANCE) {
-          powerups.push(new PowerUp(a.x, a.y));
-          powerupSpawned = true;
-        }
+        levelKills++;
+        if (levelKills === powerupKillTarget) powerups.push(new PowerUp(a.x, a.y));
       }
     }
   }
