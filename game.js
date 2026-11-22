@@ -286,6 +286,7 @@ class Particle {
 let ship, bullets, asteroids, particles, powerups;
 let score, lives, level;
 let tripleShotTimer;  // segundos restantes de disparo triple
+let powerupSpawned;   // el power-up solo aparece una vez por juego
 let state;      // 'playing' | 'dead' | 'gameover'
 let deadTimer;
 
@@ -308,6 +309,7 @@ function initGame() {
   particles = [];
   powerups  = [];
   tripleShotTimer = 0;
+  powerupSpawned  = false;
   score  = 0;
   lives  = 3;
   level  = 1;
@@ -386,7 +388,10 @@ function update(dt) {
         score += POINTS[a.size];
         explode(a.x, a.y, a.size * 5);
         newAsteroids.push(...a.split());
-        if (Math.random() < POWERUP_DROP_CHANCE) powerups.push(new PowerUp(a.x, a.y));
+        if (!powerupSpawned && Math.random() < POWERUP_DROP_CHANCE) {
+          powerups.push(new PowerUp(a.x, a.y));
+          powerupSpawned = true;
+        }
       }
     }
   }
